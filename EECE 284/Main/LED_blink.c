@@ -1,5 +1,5 @@
 /*
- * Title: main_program
+ * Title: LED_Blink
  * Author: Victa Li
  * Purpose: this is a test main program for testing communications with the P89LPC9351 board
  * 			the codes come from the course website, checked by Victa
