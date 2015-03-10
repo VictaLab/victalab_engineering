@@ -5,11 +5,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <p89lpc9351.h>
+#include <math.h>
 
 #define XTAL 7373000L
 #define BAUD 115200L
 
 // Make sure these definitions match your wiring
+//===================================================================================
 #define LCD_RS P3_0
 #define LCD_RW P1_6
 #define LCD_E  P1_7
@@ -22,6 +24,9 @@
 #define LCD_D1 P2_1
 #define LCD_D0 P2_0
 #define CHARS_PER_LINE 16
+//===================================================================================
+
+#define MICRO_SECOND 0.001
 
 void InitPorts(void)
 {
@@ -131,6 +136,106 @@ void LCDprint(char * string, unsigned char line, bit clear)
 	if(clear) for(; j<CHARS_PER_LINE; j++) WriteData(' '); // Clear the rest of the line
 }
 
+// ===========================================================================
+// Add-ons:
+
+// Return the current voltage at the pin number 
+// -- param: pinNum, int 
+float getVoltage(unsigned int pinNum)
+{
+	return read_pin(pinNum); // how?
+}
+
+// write a message describing the current voltage
+// -- param: voltage, float
+// 			 voltageStr, the resultant string 
+void writeVoltage(float voltage, char * voltageStr){
+	char temp[5];
+	floatToString(voltage, temp, 1);
+	timeStr =  "V: " + temp;
+}
+
+// write a message describing the Timer
+// -- param: currentTime, int
+// 		     timeStr, the resultant string
+void writeTimer(float currentTime, char * timeStr){
+	char temp[5];
+	floatToString(currentTime, temp, 1);
+	timeStr =  "T: " + temp;
+}
+
+// convert a float value to a string
+// param: -- x is the target float number
+//		  -- str is the converted string 
+// 		  -- decimalPlace is the number of decimal places wanted
+void floatToString(float x, char * str, int decimalPlace){
+	// integer part:
+	int intergerPart = (int) x;
+
+	// float part:
+	float floatPart = x - intergerPart;
+
+	// Here count has the valur of the last digit of the integer part:
+	int count = intergerToString(intergerPart, char * str, 0);
+
+	// check for display option after point
+    if (decimalPlace != 0)
+    {
+        str[count] = '.';  // add dot
+ 
+        // Get the value of fraction part upto given no.
+        // of points after dot. The third parameter is needed
+        // to handle cases like 233.007
+        floatPart = floatPart * pow(10, decimalPlace);
+ 
+        intergerToString((int)floatPart, str + count + 1, decimalPlace);
+    }
+}
+
+// Converts a given integer x to string str[].  
+// param: -- integer is the integer to be converted
+// -- str is the resultant string
+// -- d is the number
+// of digits required in output. If d is more than the number
+// of digits in x, then 0s are added at the beginning.
+// returns: -- count, the index of the last char of the string
+int integerToString(int integer, char * str, int d)
+{
+    int count = 0;
+    while (integer)
+    {
+        str[count++] = (integer % 10) + '0';
+        integer = integer / 10;
+    }
+ 
+    // If number of digits required is more, then
+    // add 0s at the beginning
+    while (count < d)
+        str[count++] = '0';
+ 
+    reverse(str, count);
+    str[count] = '\0';
+    return count;
+}
+
+// reverses a string 'string' of length 'length'
+void reverse(char * str, int length)
+{
+    int i=0, j=length-1, temp;
+    while (i < j)
+    {
+        temp = str[i];
+        str[i] = str[j];
+        str[j] = temp;
+        i++; j--;
+    }
+}
+
+// reset
+int resetTimer(float currentTime){
+
+}
+
 // Here is the main LCD program
 // It does the following:
 //		1. Display the current battery voltage
@@ -138,11 +243,42 @@ void LCDprint(char * string, unsigned char line, bit clear)
 void main (void)
 {
 	// Here is a little demonstration code to test the LCD is working properly.
+	/*
 	InitPorts();
 	LCD_8BIT();
    	// Display something in the LCD
 	LCDprint("LCD 8-bit test:", 1, 1);
 	LCDprint("Hello, World!", 2, 1);
+	*/
 
-	// Assume 
+	InitPorts();
+	LCD_8BIT();
+
+	float currentTime = 0;
+	float clockTimeStep = 3 * MICRO_SECOND; // Here we assume the clock time step is 3 micro seconds;
+	char voltageStr[8]; // the message to be displayed
+	char timeStr[8];
+
+
+	// ======================================
+	// || Timeer & Battery Voltage Display ||
+	// ======================================
+	// Here we assume the voltage inputs are:
+	// Battery voltage input @ P0M1
+	// The battery voltage should be 0 to 6 volt
+
+	// We want to display the voltage at the second line (Cuz it's much longer than time!)
+
+	while(true){
+		currentTime = currentTime + clockTimeStep;
+
+		currentBatteryVoltage = getVoltage(P0M1); 
+		writeTimer(currentTime, timeStr);
+		writeVoltage(currentBatteryVoltage, voltageStr);
+
+		LCDprint(timeStr, 1, 1);
+		LCDprint(voltageStr, 2, 1);
+	}
+	
+
 }
