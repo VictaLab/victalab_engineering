@@ -7,7 +7,7 @@
 #define SENSOR_LEFT #0x67	// These are arbitrarily decided for now
 #define SENSOR_RIGHT #0x68
 #define SENSOR_MIDDLE #0x69
-#define MOTOR_LEFT #0x70
+#define MOTOR_LEFT #0x70	// These are motor driving pins
 #define MOTOR_RIGHT #0x71
 
 // Expectations
